@@ -1,0 +1,1058 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "racing-data-fastapi",
+        "summary": "A cached, key-custodying FastAPI backend over the PuntersEdge Australian racing and sports odds API.",
+        "description": "A reference backend for reading the PuntersEdge odds feed.\n\nRuns without an upstream API key by proxying the keyless demo endpoints. Set `PE_API_KEY` to serve the full feed.\n\nFree key: https://puntersedge.online/api?utm_source=racing-data-fastapi&utm_medium=code",
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/races/next": {
+            "get": {
+                "tags": [
+                    "racing"
+                ],
+                "summary": "Next races to jump",
+                "description": "Upcoming races with every bookmaker price this feed carries, best price per runner precomputed. Serves the keyless PuntersEdge demo sample when no PE_API_KEY is configured, and the full feed when one is.",
+                "operationId": "races_next_races_next_get",
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "description": "ISO country codes, comma separated. 'any' disables the filter.",
+                            "default": "AU",
+                            "title": "Country"
+                        },
+                        "description": "ISO country codes, comma separated. 'any' disables the filter."
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 200,
+                            "minimum": 1,
+                            "default": 10,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "horse, harness or greyhound. Omit for all.",
+                            "title": "Category"
+                        },
+                        "description": "horse, harness or greyhound. Omit for all."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RacesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/races/{race_id}/prices": {
+            "get": {
+                "tags": [
+                    "racing"
+                ],
+                "summary": "Every bookmaker price for one race",
+                "description": "Reads the race out of the snapshot /races/next already fetched, so in the common case this route costs zero additional upstream credits.",
+                "operationId": "race_prices_races__race_id__prices_get",
+                "parameters": [
+                    {
+                        "name": "race_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "race_id from /races/next",
+                            "title": "Race Id"
+                        },
+                        "description": "race_id from /races/next"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RacePricesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/races/{race_id}/history": {
+            "get": {
+                "tags": [
+                    "racing"
+                ],
+                "summary": "Open/close/high/low per runner-bookmaker for a race that has run",
+                "description": "Wraps /v1/racing/price-history (5 credits). Requires an upstream key. Upstream returns 404 for a race that has not jumped yet -- history is written once the market has closed, not while it is live.",
+                "operationId": "race_history_races__race_id__history_get",
+                "parameters": [
+                    {
+                        "name": "race_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "race_id of a race that has already run",
+                            "title": "Race Id"
+                        },
+                        "description": "race_id of a race that has already run"
+                    },
+                    {
+                        "name": "include_points",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "True returns every recorded point, not just open/close/high/low",
+                            "default": false,
+                            "title": "Include Points"
+                        },
+                        "description": "True returns every recorded point, not just open/close/high/low"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PriceHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/best-odds/{sport}": {
+            "get": {
+                "tags": [
+                    "sports"
+                ],
+                "summary": "Best available price per selection across bookmakers",
+                "description": "Keyed mode calls /v1/best-odds/{sport_key} (3 credits). Keyless mode calls /v1/demo/best-odds (0 credits), which returns a truncated sample.",
+                "operationId": "best_odds_best_odds__sport__get",
+                "parameters": [
+                    {
+                        "name": "sport",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Sport key, e.g. afl, nrl, nba",
+                            "title": "Sport"
+                        },
+                        "description": "Sport key, e.g. afl, nrl, nba"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BestOddsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "tags": [
+                    "ops"
+                ],
+                "summary": "Liveness, mode and cache state",
+                "operationId": "health_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BestOddsResponse": {
+                "properties": {
+                    "source": {
+                        "$ref": "#/components/schemas/Source"
+                    },
+                    "sport": {
+                        "type": "string",
+                        "title": "Sport"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "title": "Count"
+                    },
+                    "events": {
+                        "items": {
+                            "$ref": "#/components/schemas/Event"
+                        },
+                        "type": "array",
+                        "title": "Events"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "source",
+                    "sport",
+                    "count",
+                    "events"
+                ],
+                "title": "BestOddsResponse"
+            },
+            "CacheBlock": {
+                "properties": {
+                    "requests_served": {
+                        "type": "integer",
+                        "title": "Requests Served"
+                    },
+                    "hits": {
+                        "type": "integer",
+                        "title": "Hits"
+                    },
+                    "misses": {
+                        "type": "integer",
+                        "title": "Misses"
+                    },
+                    "coalesced": {
+                        "type": "integer",
+                        "title": "Coalesced"
+                    },
+                    "hit_rate": {
+                        "type": "number",
+                        "title": "Hit Rate"
+                    },
+                    "upstream_calls": {
+                        "type": "integer",
+                        "title": "Upstream Calls"
+                    },
+                    "upstream_errors": {
+                        "type": "integer",
+                        "title": "Upstream Errors"
+                    },
+                    "credits_spent": {
+                        "type": "integer",
+                        "title": "Credits Spent"
+                    },
+                    "credits_avoided_by_cache": {
+                        "type": "integer",
+                        "title": "Credits Avoided By Cache"
+                    },
+                    "live_keys": {
+                        "additionalProperties": {
+                            "type": "number"
+                        },
+                        "type": "object",
+                        "title": "Live Keys"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "requests_served",
+                    "hits",
+                    "misses",
+                    "coalesced",
+                    "hit_rate",
+                    "upstream_calls",
+                    "upstream_errors",
+                    "credits_spent",
+                    "credits_avoided_by_cache",
+                    "live_keys"
+                ],
+                "title": "CacheBlock"
+            },
+            "Event": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "sport": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sport"
+                    },
+                    "home_team": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Home Team"
+                    },
+                    "away_team": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Away Team"
+                    },
+                    "commence_time": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Commence Time"
+                    },
+                    "selections": {
+                        "items": {
+                            "$ref": "#/components/schemas/Selection"
+                        },
+                        "type": "array",
+                        "title": "Selections"
+                    }
+                },
+                "type": "object",
+                "title": "Event"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "ok | degraded"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "title": "Mode"
+                    },
+                    "upstream": {
+                        "type": "string",
+                        "title": "Upstream"
+                    },
+                    "upstream_reachable": {
+                        "type": "boolean",
+                        "title": "Upstream Reachable"
+                    },
+                    "upstream_latency_ms": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Upstream Latency Ms"
+                    },
+                    "upstream_detail": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Upstream Detail"
+                    },
+                    "credits_remaining": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Credits Remaining"
+                    },
+                    "cache": {
+                        "$ref": "#/components/schemas/CacheBlock"
+                    },
+                    "ttl_seconds": {
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "type": "object",
+                        "title": "Ttl Seconds"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "mode",
+                    "upstream",
+                    "upstream_reachable",
+                    "cache",
+                    "ttl_seconds"
+                ],
+                "title": "HealthResponse"
+            },
+            "HistoryBook": {
+                "properties": {
+                    "bookmaker": {
+                        "type": "string",
+                        "title": "Bookmaker"
+                    },
+                    "open_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Open Price"
+                    },
+                    "close_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Close Price"
+                    },
+                    "high": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "High"
+                    },
+                    "low": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Low"
+                    },
+                    "move_pct": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Move Pct"
+                    },
+                    "points_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Points Count"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "bookmaker"
+                ],
+                "title": "HistoryBook"
+            },
+            "HistoryRunner": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "number": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Number"
+                    },
+                    "bookmakers": {
+                        "items": {
+                            "$ref": "#/components/schemas/HistoryBook"
+                        },
+                        "type": "array",
+                        "title": "Bookmakers"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "HistoryRunner"
+            },
+            "Price": {
+                "properties": {
+                    "bookmaker": {
+                        "type": "string",
+                        "title": "Bookmaker",
+                        "description": "Bookmaker key, e.g. 'sportsbet'"
+                    },
+                    "win_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Win Price",
+                        "description": "Decimal win odds"
+                    },
+                    "place_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Place Price",
+                        "description": "Decimal place odds, when quoted"
+                    },
+                    "age_seconds": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Age Seconds",
+                        "description": "Seconds since this price was last observed upstream"
+                    },
+                    "source_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Url",
+                        "description": "Bookmaker page this price came from"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "bookmaker"
+                ],
+                "title": "Price"
+            },
+            "PriceHistoryResponse": {
+                "properties": {
+                    "source": {
+                        "$ref": "#/components/schemas/Source"
+                    },
+                    "race_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Race Id"
+                    },
+                    "venue": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Venue"
+                    },
+                    "race_number": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Race Number"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "start_time": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Start Time"
+                    },
+                    "runners": {
+                        "items": {
+                            "$ref": "#/components/schemas/HistoryRunner"
+                        },
+                        "type": "array",
+                        "title": "Runners"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "source"
+                ],
+                "title": "PriceHistoryResponse"
+            },
+            "Race": {
+                "properties": {
+                    "race_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Race Id"
+                    },
+                    "venue": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Venue"
+                    },
+                    "race_number": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Race Number"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category",
+                        "description": "horse | harness | greyhound"
+                    },
+                    "country": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Country"
+                    },
+                    "start_time": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Start Time",
+                        "description": "ISO 8601 UTC"
+                    },
+                    "runners": {
+                        "items": {
+                            "$ref": "#/components/schemas/Runner"
+                        },
+                        "type": "array",
+                        "title": "Runners"
+                    }
+                },
+                "type": "object",
+                "title": "Race"
+            },
+            "RacePricesResponse": {
+                "properties": {
+                    "source": {
+                        "$ref": "#/components/schemas/Source"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "source",
+                    "race"
+                ],
+                "title": "RacePricesResponse"
+            },
+            "RacesResponse": {
+                "properties": {
+                    "source": {
+                        "$ref": "#/components/schemas/Source"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "title": "Count"
+                    },
+                    "races": {
+                        "items": {
+                            "$ref": "#/components/schemas/Race"
+                        },
+                        "type": "array",
+                        "title": "Races"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "source",
+                    "count",
+                    "races"
+                ],
+                "title": "RacesResponse"
+            },
+            "Runner": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "number": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Number"
+                    },
+                    "best_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Best Price",
+                        "description": "Highest win price across the bookmakers quoting this runner"
+                    },
+                    "best_bookmaker": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Best Bookmaker"
+                    },
+                    "prices": {
+                        "items": {
+                            "$ref": "#/components/schemas/Price"
+                        },
+                        "type": "array",
+                        "title": "Prices"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "Runner"
+            },
+            "Selection": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "best_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Best Price"
+                    },
+                    "best_bookmaker": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Best Bookmaker"
+                    },
+                    "quoted_by": {
+                        "type": "integer",
+                        "title": "Quoted By",
+                        "description": "How many bookmakers quoted this selection",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "Selection"
+            },
+            "Source": {
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "title": "Mode",
+                        "description": "'demo' (no upstream key) or 'keyed'"
+                    },
+                    "cached": {
+                        "type": "boolean",
+                        "title": "Cached"
+                    },
+                    "cache_age_seconds": {
+                        "type": "number",
+                        "title": "Cache Age Seconds"
+                    },
+                    "upstream_path": {
+                        "type": "string",
+                        "title": "Upstream Path"
+                    },
+                    "credits_charged": {
+                        "type": "integer",
+                        "title": "Credits Charged",
+                        "description": "Upstream credits this particular request spent (0 on a cache hit)"
+                    },
+                    "note": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Note"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "mode",
+                    "cached",
+                    "cache_age_seconds",
+                    "upstream_path",
+                    "credits_charged"
+                ],
+                "title": "Source",
+                "description": "Where the payload came from and how stale it is.\n\nPresent on every response so a caller can tell a cached answer from a fresh\none, and a demo-tier sample from full data, without guessing."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

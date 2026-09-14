@@ -1,0 +1,729 @@
+racing-data-fastapi -- real captured output
+Captured: 2026-09-14 23:31:51Z UTC
+Host: macOS 24.6.0, Python 3.9.6, uvicorn 127.0.0.1:8000, upstream api.puntersedge.online
+
+===============================================================
+ PART 1  KEYLESS DEMO MODE -- no PE_API_KEY, zero credits
+===============================================================
+
+$ uvicorn app.main:app --port 8000
+2026-09-15 09:31:52,412 INFO proxy mode=demo upstream=https://api.puntersedge.online/v1 ttl_races=20s
+2026-09-15 09:31:52,412 INFO proxy no PE_API_KEY set -- serving the keyless demo endpoints. Free key: https://puntersedge.online/api?utm_source=racing-data-fastapi&utm_medium=code
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+$ curl -s http://127.0.0.1:8000/health
+{
+    "status": "ok",
+    "mode": "demo",
+    "upstream": "https://api.puntersedge.online/v1",
+    "upstream_reachable": true,
+    "upstream_latency_ms": 243.4,
+    "upstream_detail": null,
+    "credits_remaining": null,
+    "cache": {
+        "requests_served": 0,
+        "hits": 0,
+        "misses": 0,
+        "coalesced": 0,
+        "hit_rate": 0.0,
+        "upstream_calls": 0,
+        "upstream_errors": 0,
+        "credits_spent": 0,
+        "credits_avoided_by_cache": 0,
+        "live_keys": {}
+    },
+    "ttl_seconds": {
+        "races": 20,
+        "best_odds": 60,
+        "history": 900
+    }
+}
+
+$ curl -s 'http://127.0.0.1:8000/races/next?country=AU&limit=2'
+{
+    "source": {
+        "mode": "demo",
+        "cached": false,
+        "cache_age_seconds": 0.0,
+        "upstream_path": "/demo/racing/next-to-go",
+        "credits_charged": 0,
+        "note": "Free sandbox sample (truncated). Get a free API key for full data: https://puntersedge.online/api?utm_source=demo_api&utm_medium=sandbox"
+    },
+    "count": 2,
+    "races": [
+        {
+            "race_id": "e79e50b1-bc25-4d1d-976c-6b34d0b6426c",
+            "venue": "Angle Park",
+            "race_number": 1,
+            "category": "greyhound",
+            "country": "AU",
+            "start_time": "2026-09-15T01:38:00Z",
+            "runners": [
+                {
+                    "name": "Alia Rose",
+                    "number": 1,
+                    "best_price": 14.0,
+                    "best_bookmaker": "tab",
+                    "prices": [
+                        {
+                            "bookmaker": "tab",
+                            "win_price": 14.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tab.com.au/racing/2026-09-15/ANGLE-PARK/ANG/G/1"
+                        },
+                        {
+                            "bookmaker": "pointsbetau",
+                            "win_price": 14.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://pointsbet.com.au/racing/Greyhound/AUS/Angle-Park/race/115173313"
+                        },
+                        {
+                            "bookmaker": "ladbrokes_au",
+                            "win_price": 13.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.ladbrokes.com.au/racing/angle-park/f9f11182-6bc7-4b23-b9b2-bc4af444f325"
+                        }
+                    ]
+                },
+                {
+                    "name": "Sandy Knuckles",
+                    "number": 2,
+                    "best_price": 4.8,
+                    "best_bookmaker": "tab",
+                    "prices": [
+                        {
+                            "bookmaker": "tab",
+                            "win_price": 4.8,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tab.com.au/racing/2026-09-15/ANGLE-PARK/ANG/G/1"
+                        },
+                        {
+                            "bookmaker": "ladbrokes_au",
+                            "win_price": 4.6,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.ladbrokes.com.au/racing/angle-park/f9f11182-6bc7-4b23-b9b2-bc4af444f325"
+                        },
+                        {
+                            "bookmaker": "betdeluxe",
+                            "win_price": 4.6,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.betdeluxe.com.au/racing/Greyhound/AUS/Angle%20Park/800482/1/11413259"
+                        }
+                    ]
+                },
+                {
+                    "name": "Adhana Remi",
+                    "number": 4,
+                    "best_price": 3.0,
+                    "best_bookmaker": "sportsbet",
+                    "prices": [
+                        {
+                            "bookmaker": "sportsbet",
+                            "win_price": 3.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.sportsbet.com.au/greyhound-racing/australia-nz/angle-park/race-1-10922417"
+                        },
+                        {
+                            "bookmaker": "unibet",
+                            "win_price": 3.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.unibet.com.au/racing#/event/202609150100.G.AUS.angle_park.1"
+                        },
+                        {
+                            "bookmaker": "pointsbetau",
+                            "win_price": 3.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://pointsbet.com.au/racing/Greyhound/AUS/Angle-Park/race/115173313"
+                        }
+                    ]
+                },
+                {
+                    "name": "Whiplash Emmett",
+                    "number": 5,
+                    "best_price": 26.0,
+                    "best_bookmaker": "tab",
+                    "prices": [
+                        {
+                            "bookmaker": "tab",
+                            "win_price": 26.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tab.com.au/racing/2026-09-15/ANGLE-PARK/ANG/G/1"
+                        },
+                        {
+                            "bookmaker": "betdeluxe",
+                            "win_price": 26.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.betdeluxe.com.au/racing/Greyhound/AUS/Angle%20Park/800482/1/11413259"
+                        },
+                        {
+                            "bookmaker": "sportsbet",
+                            "win_price": 26.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.sportsbet.com.au/greyhound-racing/australia-nz/angle-park/race-1-10922417"
+                        }
+                    ]
+                },
+                {
+                    "name": "Twitching",
+                    "number": 7,
+                    "best_price": 2.25,
+                    "best_bookmaker": "tab",
+                    "prices": [
+                        {
+                            "bookmaker": "tab",
+                            "win_price": 2.25,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tab.com.au/racing/2026-09-15/ANGLE-PARK/ANG/G/1"
+                        },
+                        {
+                            "bookmaker": "betdeluxe",
+                            "win_price": 2.25,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.betdeluxe.com.au/racing/Greyhound/AUS/Angle%20Park/800482/1/11413259"
+                        },
+                        {
+                            "bookmaker": "betr_au",
+                            "win_price": 2.25,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.betr.com.au/racing/Australian-Greyhound/Angle%20Park/Race-1/92156609/win"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "race_id": "8a0af838-95a4-42e8-9591-1e6ab4a0ed34",
+            "venue": "Hobart",
+            "race_number": 1,
+            "category": "greyhound",
+            "country": "AU",
+            "start_time": "2026-09-15T01:45:00Z",
+            "runners": [
+                {
+                    "name": "Juneau Quadrant",
+                    "number": 1,
+                    "best_price": 6.0,
+                    "best_bookmaker": "tab",
+                    "prices": [
+                        {
+                            "bookmaker": "tab",
+                            "win_price": 6.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tab.com.au/racing/2026-09-15/HOBART/HOB/G/1"
+                        },
+                        {
+                            "bookmaker": "neds",
+                            "win_price": 5.5,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.neds.com.au/racing/hobart/079b1e39-04b7-4e82-8ad3-e5ebf69b56f5"
+                        },
+                        {
+                            "bookmaker": "betdeluxe",
+                            "win_price": 5.5,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.betdeluxe.com.au/racing/Greyhound/AUS/Hobart/800638/1/11416101"
+                        }
+                    ]
+                },
+                {
+                    "name": "Miss Bern",
+                    "number": 2,
+                    "best_price": 5.0,
+                    "best_bookmaker": "palmerbet",
+                    "prices": [
+                        {
+                            "bookmaker": "palmerbet",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.palmerbet.com/racing/greyhound/15-09-2026/hobart/1"
+                        },
+                        {
+                            "bookmaker": "ladbrokes_au",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.ladbrokes.com.au/racing/hobart/079b1e39-04b7-4e82-8ad3-e5ebf69b56f5"
+                        },
+                        {
+                            "bookmaker": "pointsbetau",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://pointsbet.com.au/racing/Greyhound/AUS/Hobart/race/115180119"
+                        }
+                    ]
+                },
+                {
+                    "name": "Miss Sue Lee",
+                    "number": 3,
+                    "best_price": 12.0,
+                    "best_bookmaker": "unibet",
+                    "prices": [
+                        {
+                            "bookmaker": "unibet",
+                            "win_price": 12.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.unibet.com.au/racing#/event/202609150100.G.AUS.hobart.1"
+                        },
+                        {
+                            "bookmaker": "palmerbet",
+                            "win_price": 12.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.palmerbet.com/racing/greyhound/15-09-2026/hobart/1"
+                        },
+                        {
+                            "bookmaker": "pointsbetau",
+                            "win_price": 12.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://pointsbet.com.au/racing/Greyhound/AUS/Hobart/race/115180119"
+                        }
+                    ]
+                },
+                {
+                    "name": "Listen Spider",
+                    "number": 4,
+                    "best_price": 5.0,
+                    "best_bookmaker": "palmerbet",
+                    "prices": [
+                        {
+                            "bookmaker": "palmerbet",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.palmerbet.com/racing/greyhound/15-09-2026/hobart/1"
+                        },
+                        {
+                            "bookmaker": "neds",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.neds.com.au/racing/hobart/079b1e39-04b7-4e82-8ad3-e5ebf69b56f5"
+                        },
+                        {
+                            "bookmaker": "ladbrokes_au",
+                            "win_price": 5.0,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.ladbrokes.com.au/racing/hobart/079b1e39-04b7-4e82-8ad3-e5ebf69b56f5"
+                        }
+                    ]
+                },
+                {
+                    "name": "Jamella Storm",
+                    "number": 5,
+                    "best_price": 4.4,
+                    "best_bookmaker": "tabtouch",
+                    "prices": [
+                        {
+                            "bookmaker": "tabtouch",
+                            "win_price": 4.4,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.tabtouch.com.au/racing/2026-09-15/odx/1"
+                        },
+                        {
+                            "bookmaker": "ladbrokes_au",
+                            "win_price": 4.4,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.ladbrokes.com.au/racing/hobart/079b1e39-04b7-4e82-8ad3-e5ebf69b56f5"
+                        },
+                        {
+                            "bookmaker": "unibet",
+                            "win_price": 4.4,
+                            "place_price": null,
+                            "age_seconds": null,
+                            "source_url": "https://www.unibet.com.au/racing#/event/202609150100.G.AUS.hobart.1"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+$ curl -s 'http://127.0.0.1:8000/races/next?country=AU&limit=2'   # second call, same 20s window
+{
+  "mode": "demo",
+  "cached": true,
+  "cache_age_seconds": 0.01,
+  "upstream_path": "/demo/racing/next-to-go",
+  "credits_charged": 0,
+  "note": "Free sandbox sample (truncated). Get a free API key for full data: https://puntersedge.online/api?utm_source=demo_api&utm_medium=sandbox"
+}
+
+$ curl -s http://127.0.0.1:8000/best-odds/afl
+{
+    "source": {
+        "mode": "demo",
+        "cached": false,
+        "cache_age_seconds": 0.0,
+        "upstream_path": "/demo/best-odds",
+        "credits_charged": 0,
+        "note": "Free sandbox sample (truncated). Get a free API key for full data: https://puntersedge.online/api?utm_source=demo_api&utm_medium=sandbox"
+    },
+    "sport": "afl",
+    "count": 3,
+    "events": [
+        {
+            "id": null,
+            "sport": "afl",
+            "home_team": "Sydney",
+            "away_team": "Fremantle",
+            "commence_time": "2026-09-18T09:40:00Z",
+            "selections": [
+                {
+                    "name": "Sydney",
+                    "best_price": 2.5,
+                    "best_bookmaker": "palmerbet",
+                    "quoted_by": 0
+                },
+                {
+                    "name": "Fremantle",
+                    "best_price": 1.55,
+                    "best_bookmaker": "sportsbet",
+                    "quoted_by": 0
+                }
+            ]
+        },
+        {
+            "id": null,
+            "sport": "afl",
+            "home_team": "Hawthorn",
+            "away_team": "Brisbane Lions",
+            "commence_time": "2026-09-19T07:15:50Z",
+            "selections": [
+                {
+                    "name": "Hawthorn",
+                    "best_price": 2.02,
+                    "best_bookmaker": "betright",
+                    "quoted_by": 0
+                },
+                {
+                    "name": "Brisbane Lions",
+                    "best_price": 1.82,
+                    "best_bookmaker": "ladbrokes_au",
+                    "quoted_by": 0
+                }
+            ]
+        },
+        {
+            "id": null,
+            "sport": "afl",
+            "home_team": "Brodie Grundy",
+            "away_team": "Christian Petracca",
+            "commence_time": "2026-09-21T10:10:00Z",
+            "selections": [
+                {
+                    "name": "Brodie Grundy",
+                    "best_price": 1.87,
+                    "best_bookmaker": "sportsbet",
+                    "quoted_by": 0
+                },
+                {
+                    "name": "Christian Petracca",
+                    "best_price": 1.87,
+                    "best_bookmaker": "sportsbet",
+                    "quoted_by": 0
+                }
+            ]
+        }
+    ]
+}
+
+$ curl -i -s http://127.0.0.1:8000/best-odds/horse-racing   # refused locally, costs nothing
+HTTP/1.1 400 Bad Request
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/unknown-sport","title":"Unknown sport key","status":400,"detail":"'horse-racing' is not a sport key this feed serves.","valid_sport_keys":["afl","aflw","basketball_other","cricket_other","cricket_test","mlb","mma","nba","ncaaf","nfl","nhl","nrl","nrlw","rugby_union","soccer_epl","soccer_other","super_league","tennis_atp","tennis_wta","wnba"],"retryable":false}
+$ curl -i -s http://127.0.0.1:8000/races/does-not-exist/prices
+HTTP/1.1 404 Not Found
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/race-not-open","title":"Race not in the current snapshot","status":404,"detail":"race_id 'does-not-exist' is not in the currently quoted set. Races leave next-to-go once they jump; use /races/{race_id}/history for a race that has already run.","retryable":false}
+--- what the upstream actually saw for those 6 proxy requests ---
+HTTP Request: GET https://api.puntersedge.online/v1/demo/racing/next-to-go "HTTP/1.1 200 OK"
+HTTP Request: GET https://api.puntersedge.online/v1/demo/racing/next-to-go "HTTP/1.1 200 OK"
+HTTP Request: GET https://api.puntersedge.online/v1/demo/best-odds?sport=afl "HTTP/1.1 200 OK"
+
+===============================================================
+ PART 2  KEYED MODE -- PE_API_KEY set, real credits spent
+===============================================================
+
+$ curl -s localhost:8000/health
+{
+    "status": "ok",
+    "mode": "keyed",
+    "upstream": "https://api.puntersedge.online/v1",
+    "upstream_reachable": true,
+    "upstream_latency_ms": 196.0,
+    "upstream_detail": null,
+    "credits_remaining": null,
+    "cache": {
+        "requests_served": 0,
+        "hits": 0,
+        "misses": 0,
+        "coalesced": 0,
+        "hit_rate": 0.0,
+        "upstream_calls": 0,
+        "upstream_errors": 0,
+        "credits_spent": 0,
+        "credits_avoided_by_cache": 0,
+        "live_keys": {}
+    },
+    "ttl_seconds": {
+        "races": 20,
+        "best_odds": 60,
+        "history": 900
+    }
+}
+
+$ curl -s 'localhost:8000/races/next?country=AU&limit=1'   # trimmed to one runner
+{
+  "source": {
+    "mode": "keyed",
+    "cached": false,
+    "cache_age_seconds": 0.0,
+    "upstream_path": "/racing/next-to-go",
+    "credits_charged": 2,
+    "note": null
+  },
+  "count": 1,
+  "races": [
+    {
+      "race_id": "e79e50b1-bc25-4d1d-976c-6b34d0b6426c",
+      "venue": "Angle Park",
+      "race_number": 1,
+      "category": "greyhound",
+      "country": "AU",
+      "start_time": "2026-09-15T01:38:00Z",
+      "runners": [
+        {
+          "name": "Alia Rose",
+          "number": 1,
+          "best_price": 14.0,
+          "best_bookmaker": "tab",
+          "prices": [
+            {
+              "bookmaker": "tab",
+              "win_price": 14.0,
+              "place_price": 4.6,
+              "age_seconds": 28.0,
+              "source_url": "https://www.tab.com.au/racing/2026-09-15/ANGLE-PARK/ANG/G/1"
+            },
+            {
+              "bookmaker": "pointsbetau",
+              "win_price": 14.0,
+              "place_price": 3.8,
+              "age_seconds": 160.0,
+              "source_url": "https://pointsbet.com.au/racing/Greyhound/AUS/Angle-Park/race/115173313"
+            },
+            {
+              "bookmaker": "ladbrokes_au",
+              "win_price": 13.0,
+              "place_price": 4.0,
+              "age_seconds": 28.0,
+              "source_url": "https://www.ladbrokes.com.au/racing/angle-park/f9f11182-6bc7-4b23-b9b2-bc4af444f325"
+            },
+            {
+              "bookmaker": "neds",
+              "win_price": 13.0,
+              "place_price": 4.0,
+              "age_seconds": 28.0,
+              "source_url": "https://www.neds.com.au/racing/angle-park/f9f11182-6bc7-4b23-b9b2-bc4af444f325"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+$ python3 tools/demo_single_flight.py 25
+url                 /races/next?country=AU&limit=22
+concurrent requests 25
+wall time           488 ms
+200 responses       25
+credits charged     2  (sum of source.credits_charged across all 25)
+
+misses                1 -> 2    (+1)
+coalesced             0 -> 24   (+24)
+hits                  0 -> 0    (+0)
+upstream_calls        1 -> 2    (+1)
+credits_spent         2 -> 4    (+2)
+
+$ curl -s localhost:8000/races/de29eb14-1ad1-4fb2-94d9-ab3a588c38f2/history   # a race that has run
+{
+  "source": {
+    "mode": "keyed",
+    "cached": false,
+    "cache_age_seconds": 0.0,
+    "upstream_path": "/racing/price-history",
+    "credits_charged": 5,
+    "note": null
+  },
+  "race_id": "de29eb14-1ad1-4fb2-94d9-ab3a588c38f2",
+  "venue": "Sandown Park",
+  "race_number": 11,
+  "category": "greyhound",
+  "start_time": "2026-09-14T12:27:00Z",
+  "runners": [
+    {
+      "name": "Devil's Sympathy",
+      "number": 1,
+      "bookmakers": [
+        {
+          "bookmaker": "betdeluxe",
+          "open_price": 1.95,
+          "close_price": 2.0,
+          "high": 2.0,
+          "low": 1.95,
+          "move_pct": 2.56,
+          "points_count": 2
+        },
+        {
+          "bookmaker": "betgold",
+          "open_price": 1.9,
+          "close_price": 1.85,
+          "high": 2.0,
+          "low": 1.75,
+          "move_pct": -2.63,
+          "points_count": 9
+        },
+        {
+          "bookmaker": "betr_au",
+          "open_price": 1.95,
+          "close_price": 1.8,
+          "high": 2.0,
+          "low": 1.8,
+          "move_pct": -7.69,
+          "points_count": 5
+        },
+        {
+          "bookmaker": "betright",
+          "open_price": 2.05,
+          "close_price": 1.8,
+          "high": 2.05,
+          "low": 1.8,
+          "move_pct": -12.2,
+          "points_count": 4
+        }
+      ]
+    },
+    {
+      "name": "Viking Ruler",
+      "number": 2,
+      "bookmakers": [
+        {
+          "bookmaker": "betdeluxe",
+          "open_price": 2.4,
+          "close_price": 2.4,
+          "high": 2.4,
+          "low": 2.4,
+          "move_pct": 0.0,
+          "points_count": 1
+        },
+        {
+          "bookmaker": "betgold",
+          "open_price": 2.3,
+          "close_price": 2.9,
+          "high": 3.1,
+          "low": 2.3,
+          "move_pct": 26.09,
+          "points_count": 10
+        },
+        {
+          "bookmaker": "betr_au",
+          "open_price": 2.4,
+          "close_price": 3.0,
+          "high": 3.0,
+          "low": 2.4,
+          "move_pct": 25.0,
+          "points_count": 9
+        },
+        {
+          "bookmaker": "betright",
+          "open_price": 2.4,
+          "close_price": 2.8,
+          "high": 2.8,
+          "low": 2.4,
+          "move_pct": 16.67,
+          "points_count": 4
+        }
+      ]
+    }
+  ]
+}
+
+$ curl -i -s localhost:8000/races/<a race that has NOT jumped>/history
+HTTP/1.1 404 Not Found
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/not-found","title":"Not found upstream","status":404,"detail":"No price history for race_id 'e79e50b1-bc25-4d1d-976c-6b34d0b6426c'.","retryable":false,"upstream_status":404}
+
+$ curl -s localhost:8000/health   # cache accounting after the above
+{
+  "requests_served": 28,
+  "hits": 0,
+  "misses": 4,
+  "coalesced": 24,
+  "hit_rate": 0.8571,
+  "upstream_calls": 3,
+  "upstream_errors": 1,
+  "credits_spent": 9,
+  "credits_avoided_by_cache": 48,
+  "live_keys": {
+    "races:AU:1:*": 18.8,
+    "races:AU:22:*": 19.3,
+    "history:de29eb14-1ad1-4fb2-94d9-ab3a588c38f2:False": 899.8
+  }
+}
+
+===============================================================
+ PART 3  ERROR PASSTHROUGH -- tools/stub_upstream.py
+ 402 and 429 are both 'upstream said no'. Only one is worth retrying.
+===============================================================
+
+--- upstream returns 402 -------------------------------------
+$ curl -i -s 'localhost:8000/races/next?limit=2'
+HTTP/1.1 402 Payment Required
+content-type: application/problem+json
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/upstream-credits-exhausted","title":"Upstream credit allowance exhausted","status":402,"detail":"This service's PuntersEdge credit allowance for the current period is spent. Retrying will not help until it resets or the plan is raised.","retryable":false,"upstream_status":402,"upstream_detail":"Plan credits for this period are spent."}
+
+--- upstream returns 429 -------------------------------------
+$ curl -i -s 'localhost:8000/races/next?limit=2'
+HTTP/1.1 429 Too Many Requests
+retry-after: 37
+content-type: application/problem+json
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/upstream-rate-limited","title":"Upstream rate limit reached","status":429,"detail":"The PuntersEdge rate limit was reached. This is transient -- retry after the interval in the Retry-After header.","retryable":true,"retry_after_seconds":37,"upstream_status":429,"upstream_detail":"Demo rate limit reached (30/min per IP)."}
+
+--- upstream returns 401 -------------------------------------
+$ curl -i -s 'localhost:8000/races/next?limit=2'
+HTTP/1.1 502 Bad Gateway
+content-type: application/problem+json
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/upstream-auth","title":"Upstream rejected this service's credentials","status":502,"detail":"The configured PE_API_KEY is missing, invalid, or the endpoint is gated to a higher plan. This is a server-side configuration problem, not a problem with your request.","retryable":false,"upstream_status":401}
+
+--- upstream returns 503 -------------------------------------
+$ curl -i -s 'localhost:8000/races/next?limit=2'
+HTTP/1.1 502 Bad Gateway
+content-type: application/problem+json
+{"type":"https://github.com/Propertyscout001/racing-data-fastapi/errors/upstream-unavailable","title":"Upstream returned an error","status":502,"detail":"PuntersEdge returned HTTP 503.","retryable":true,"upstream_status":503,"upstream_detail":"Temporarily unavailable."}
+
+=== end of capture ===

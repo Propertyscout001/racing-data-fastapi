@@ -1,0 +1,167 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>racing-data-fastapi</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --fg: #1a1a18; --muted: #6b6b63; --line: #e2e1dc;
+    --panel: #ffffff; --accent: #1f5c3d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --fg: #e8e8e4; --muted: #9a9a92; --line: #2c2e31;
+      --panel: #1e2023; --accent: #6fbf95;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--fg);
+    font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 62rem; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 .35rem; font-weight: 620; letter-spacing: -.01em; }
+  p.lede { margin: 0 0 1.5rem; color: var(--muted); max-width: 46rem; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .86em; }
+  .bar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: 1.25rem; }
+  label { color: var(--muted); font-size: .85rem; }
+  select, button {
+    font: inherit; padding: .35rem .6rem; border: 1px solid var(--line);
+    background: var(--panel); color: var(--fg); border-radius: 5px;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .meta {
+    border: 1px solid var(--line); background: var(--panel); border-radius: 6px;
+    padding: .7rem .85rem; margin-bottom: 1.25rem; color: var(--muted);
+  }
+  .meta strong { color: var(--fg); font-weight: 600; }
+  .race {
+    border: 1px solid var(--line); background: var(--panel); border-radius: 6px;
+    padding: .9rem 1rem; margin-bottom: .85rem;
+  }
+  .race h2 { font-size: .95rem; margin: 0 0 .1rem; font-weight: 600; }
+  .race .sub { color: var(--muted); font-size: .82rem; margin-bottom: .6rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: .28rem .5rem .28rem 0; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+  td.num { text-align: right; padding-right: 1rem; width: 3rem; color: var(--muted); }
+  td.price { text-align: right; width: 5rem; font-variant-numeric: tabular-nums; }
+  td.book { width: 9rem; color: var(--muted); }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+  footer { margin-top: 2.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  a { color: var(--accent); }
+  .err { border-color: #b4462f; color: #b4462f; }
+</style>
+
+<main>
+  <h1>racing-data-fastapi</h1>
+  <p class="lede">
+    This page is served by the same process that proxies the odds feed. It calls
+    <code>/races/next</code> on this origin and nothing else. Open the network
+    tab: there is no upstream host and no API key in anything the browser sees.
+    That is the point of the proxy.
+  </p>
+
+  <div class="bar">
+    <label for="country">country</label>
+    <select id="country">
+      <option value="AU" selected>AU</option>
+      <option value="AU,NZ">AU,NZ</option>
+      <option value="any">any</option>
+    </select>
+    <label for="category">category</label>
+    <select id="category">
+      <option value="">all</option>
+      <option value="horse">horse</option>
+      <option value="harness">harness</option>
+      <option value="greyhound">greyhound</option>
+    </select>
+    <label for="limit">limit</label>
+    <select id="limit">
+      <option>3</option><option selected>6</option><option>12</option>
+    </select>
+    <button id="reload">reload</button>
+  </div>
+
+  <div class="meta mono" id="meta">loading…</div>
+  <div id="board"></div>
+
+  <footer>
+    <p>
+      18+ only. Gambling can be addictive — please gamble responsibly.
+      Gambling Help: 1800 858 858 ·
+      <a href="https://www.gambleaware.nsw.gov.au">gambleaware.nsw.gov.au</a>
+    </p>
+    <p>
+      A developer example for reading an odds data feed. It is not betting advice,
+      it places no bets and it holds no bookmaker credentials.
+      Data: <a href="https://puntersedge.online/api?utm_source=racing-data-fastapi&amp;utm_medium=demo">PuntersEdge</a>.
+    </p>
+  </footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function mins(iso) {
+  if (!iso) return "";
+  const d = (new Date(iso) - new Date()) / 60000;
+  if (!isFinite(d)) return "";
+  return d < 0 ? `jumped ${Math.abs(Math.round(d))}m ago` : `${Math.round(d)}m`;
+}
+
+async function load() {
+  const qs = new URLSearchParams({ country: $("country").value, limit: $("limit").value });
+  if ($("category").value) qs.set("category", $("category").value);
+  $("meta").textContent = "loading…";
+  $("meta").classList.remove("err");
+
+  let res, body;
+  try {
+    res = await fetch(`/races/next?${qs}`);
+    body = await res.json();
+  } catch (e) {
+    $("meta").classList.add("err");
+    $("meta").textContent = `fetch failed: ${e}`;
+    return;
+  }
+
+  if (!res.ok) {
+    // The service speaks RFC 9457 problem+json on every error path.
+    $("meta").classList.add("err");
+    $("meta").textContent =
+      `${body.status} ${body.title} — ${body.detail}` +
+      (body.retryable === false ? " (not retryable)" : "");
+    $("board").innerHTML = "";
+    return;
+  }
+
+  const s = body.source;
+  $("meta").innerHTML =
+    `mode=<strong>${esc(s.mode)}</strong> · cached=<strong>${s.cached}</strong> ` +
+    `(age ${s.cache_age_seconds}s) · credits charged for this request=<strong>${s.credits_charged}</strong> ` +
+    `· upstream <strong>${esc(s.upstream_path)}</strong> · ${body.count} races` +
+    (s.note ? `<br><span>${esc(s.note)}</span>` : "");
+
+  $("board").innerHTML = body.races.map(r => `
+    <div class="race">
+      <h2>${esc(r.venue ?? "?")} R${esc(r.race_number ?? "?")}</h2>
+      <div class="sub">${esc(r.category ?? "")} · ${esc(r.country ?? "")} · ${esc(mins(r.start_time))}</div>
+      <table>
+        <tr><th>#</th><th>runner</th><th style="text-align:right">best</th><th>book</th></tr>
+        ${r.runners.map(run => `
+          <tr>
+            <td class="num">${esc(run.number ?? "")}</td>
+            <td>${esc(run.name)}</td>
+            <td class="price">${run.best_price ?? "—"}</td>
+            <td class="book mono">${esc(run.best_bookmaker ?? "")}</td>
+          </tr>`).join("")}
+      </table>
+    </div>`).join("") || `<div class="race">No races matched.</div>`;
+}
+
+$("reload").addEventListener("click", load);
+["country","category","limit"].forEach(id => $(id).addEventListener("change", load));
+load();
+</script>

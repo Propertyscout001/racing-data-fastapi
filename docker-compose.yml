@@ -1,0 +1,14 @@
+services:
+  racing-data-fastapi:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Unset or empty: the service runs in keyless demo mode. Free key at
+      # https://puntersedge.online/api?utm_source=racing-data-fastapi&utm_medium=code
+      PE_API_KEY: "${PE_API_KEY:-}"
+      CACHE_TTL_RACES: "20"
+      CACHE_TTL_BEST_ODDS: "60"
+      DEFAULT_COUNTRY: "AU"
+      LOG_LEVEL: "INFO"
+    restart: unless-stopped
