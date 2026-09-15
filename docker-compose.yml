@@ -3,12 +3,23 @@ services:
     build: .
     ports:
       - "8000:8000"
+    # A .env in this directory is read if present, and ignored if not. Without
+    # this block a key sitting in .env is silently not passed to the container
+    # and you get demo data with no warning.
+    env_file:
+      - path: .env
+        required: false
     environment:
-      # Unset or empty: the service runs in keyless demo mode. Free key at
+      # Bare name, not "PE_API_KEY: ${PE_API_KEY:-}". The bare form passes the
+      # variable through only when the host actually has it set; the expanded
+      # form defines it as an empty string, which then shadows the value in
+      # .env. Unset in both places: the service runs in keyless demo mode.
+      # Free key at
       # https://puntersedge.online/api?utm_source=racing-data-fastapi&utm_medium=code
-      PE_API_KEY: "${PE_API_KEY:-}"
-      CACHE_TTL_RACES: "20"
-      CACHE_TTL_BEST_ODDS: "60"
-      DEFAULT_COUNTRY: "AU"
-      LOG_LEVEL: "INFO"
+      - PE_API_KEY
+      - CACHE_TTL_RACES=20
+      - CACHE_TTL_BEST_ODDS=60
+      - DEFAULT_COUNTRY=AU
+      - DEFAULT_INCLUDE_UNRESOLVED=true
+      - LOG_LEVEL=INFO
     restart: unless-stopped

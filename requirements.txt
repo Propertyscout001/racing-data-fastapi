@@ -1,3 +1,8 @@
-fastapi>=0.110
-uvicorn[standard]>=0.27
-httpx>=0.27
+# Upper bounds are deliberate. The README quotes a byte-level capture as
+# reproducible, and there is no test suite here to catch the morning a new
+# FastAPI or Pydantic major changes it. requirements-lock.txt holds the exact
+# versions that capture was taken on.
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+httpx>=0.27,<1.0
+python-dotenv>=1.0,<2.0

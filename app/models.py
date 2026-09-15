@@ -136,8 +136,20 @@ class HealthResponse(BaseModel):
     mode: str
     upstream: str
     upstream_reachable: bool
-    upstream_latency_ms: Optional[float] = None
+    upstream_latency_ms: Optional[float] = Field(
+        None, description="Round trip of the probe that produced this verdict"
+    )
     upstream_detail: Optional[str] = None
+    upstream_probe_cached: bool = Field(
+        False,
+        description=(
+            "True when this verdict was reused rather than re-probed. The probe "
+            "is cached so liveness-probe frequency does not set upstream request "
+            "frequency -- the keyless demo tier allows 30 requests/minute per IP."
+        ),
+    )
+    upstream_probe_age_seconds: float = 0.0
+    upstream_probe_ttl_seconds: int = 0
     credits_remaining: Optional[str] = None
     cache: CacheBlock
     ttl_seconds: Dict[str, int]

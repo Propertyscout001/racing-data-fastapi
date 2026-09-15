@@ -104,6 +104,18 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
+// An empty board in demo mode is almost always the fixed sample, not a bug.
+// Saying so on the page beats burying it in a README limitations bullet.
+function emptyMessage(source) {
+  if (source.mode === "demo") {
+    return "No races matched. In keyless demo mode the upstream sample is a fixed " +
+           "handful of races (greyhounds, when this was written) and the country, " +
+           "category and limit filters are applied to that sample locally. " +
+           "Set PE_API_KEY for the full Australian and New Zealand card.";
+  }
+  return "No races matched.";
+}
+
 function mins(iso) {
   if (!iso) return "";
   const d = (new Date(iso) - new Date()) / 60000;
@@ -138,6 +150,7 @@ async function load() {
   }
 
   const s = body.source;
+  labelCategories(s.mode);
   $("meta").innerHTML =
     `mode=<strong>${esc(s.mode)}</strong> · cached=<strong>${s.cached}</strong> ` +
     `(age ${s.cache_age_seconds}s) · credits charged for this request=<strong>${s.credits_charged}</strong> ` +
@@ -158,7 +171,17 @@ async function load() {
             <td class="book mono">${esc(run.best_bookmaker ?? "")}</td>
           </tr>`).join("")}
       </table>
-    </div>`).join("") || `<div class="race">No races matched.</div>`;
+    </div>`).join("") || `<div class="race">${emptyMessage(s)}</div>`;
+}
+
+// Mark the options the keyless sample cannot satisfy, once we know the mode.
+function labelCategories(mode) {
+  const sel = $("category");
+  [...sel.options].forEach(o => {
+    const base = o.value || "all";
+    o.textContent = (mode === "demo" && o.value && o.value !== "greyhound")
+      ? `${base} (needs a key)` : base;
+  });
 }
 
 $("reload").addEventListener("click", load);

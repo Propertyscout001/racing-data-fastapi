@@ -14,6 +14,9 @@ Single-flight matters as much as the TTL. Without it, N concurrent requests
 arriving on a cold key all miss together and all call upstream -- the cache
 reports a 99% hit rate and the bill still arrives. One asyncio.Lock per key
 collapses that stampede into one upstream call.
+
+Eviction is on use, not on a timer: sweep() runs at the top of get_or_fetch and
+drops expired entries along with any lock nobody is holding. See sweep().
 """
 from __future__ import annotations
 
@@ -62,6 +65,25 @@ class TTLCache:
         self._guard = asyncio.Lock()
         self.stats = CacheStats()
 
+    def sweep(self) -> int:
+        """Delete expired entries and the locks nobody is holding.
+
+        Without this the dict only ever grows: an expired entry is invisible to
+        readers but still resident, and _locks keeps one asyncio.Lock per key
+        for the lifetime of the process. Harmless for a fixed set of routes,
+        a slow leak the moment callers vary a query parameter. Called at the
+        top of get_or_fetch, so eviction happens on use rather than needing a
+        background task.
+        """
+        now = time.monotonic()
+        dead = [k for k, e in self._data.items() if e.expires_at <= now]
+        for k in dead:
+            del self._data[k]
+        for k in [k for k, lock in self._locks.items()
+                  if k not in self._data and not lock.locked()]:
+            del self._locks[k]
+        return len(dead)
+
     def _lock_for(self, key: str) -> asyncio.Lock:
         lock = self._locks.get(key)
         if lock is None:
@@ -90,6 +112,8 @@ class TTLCache:
         hits, because conflating the two is how a cache appears to be working
         while the upstream bill says otherwise.
         """
+        self.sweep()
+
         now = time.monotonic()
         entry = self._data.get(key)
         if entry is not None and entry.expires_at > now:
@@ -139,6 +163,7 @@ class TTLCache:
 
     def clear(self) -> None:
         self._data.clear()
+        self._locks = {k: v for k, v in self._locks.items() if v.locked()}
 
 
 cache = TTLCache()

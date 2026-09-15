@@ -60,6 +60,18 @@
                             "title": "Category"
                         },
                         "description": "horse, harness or greyhound. Omit for all."
+                    },
+                    {
+                        "name": "include_unresolved",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Keep races whose meeting is not confirmed yet (upstream country is null). Default true: a country filter drops them otherwise, and upstream documents that as 58.8% of horse races in a measured window. Set false for confirmed meetings only.",
+                            "default": true,
+                            "title": "Include Unresolved"
+                        },
+                        "description": "Keep races whose meeting is not confirmed yet (upstream country is null). Default true: a country filter drops them otherwise, and upstream documents that as 58.8% of horse races in a measured window. Set false for confirmed meetings only."
                     }
                 ],
                 "responses": {
@@ -457,7 +469,8 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Upstream Latency Ms"
+                        "title": "Upstream Latency Ms",
+                        "description": "Round trip of the probe that produced this verdict"
                     },
                     "upstream_detail": {
                         "anyOf": [
@@ -469,6 +482,22 @@
                             }
                         ],
                         "title": "Upstream Detail"
+                    },
+                    "upstream_probe_cached": {
+                        "type": "boolean",
+                        "title": "Upstream Probe Cached",
+                        "description": "True when this verdict was reused rather than re-probed. The probe is cached so liveness-probe frequency does not set upstream request frequency -- the keyless demo tier allows 30 requests/minute per IP.",
+                        "default": false
+                    },
+                    "upstream_probe_age_seconds": {
+                        "type": "number",
+                        "title": "Upstream Probe Age Seconds",
+                        "default": 0.0
+                    },
+                    "upstream_probe_ttl_seconds": {
+                        "type": "integer",
+                        "title": "Upstream Probe Ttl Seconds",
+                        "default": 0
                     },
                     "credits_remaining": {
                         "anyOf": [

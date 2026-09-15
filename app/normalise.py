@@ -56,7 +56,13 @@ def race_from(raw: Dict[str, Any]) -> Race:
                 )
             )
         priced = [p for p in prices if p.win_price is not None]
-        best = max(priced, key=lambda p: p.win_price) if priced else None
+        # Ties break alphabetically by bookmaker key, deliberately. max() returns
+        # the FIRST maximal element, so with three books all quoting 14.0 the
+        # "best bookmaker" was whatever order upstream happened to serve that
+        # call -- observed changing between consecutive calls to the same
+        # endpoint. A UI column that flickers on reload is a bug even when every
+        # value in it is correct.
+        best = min(priced, key=lambda p: (-(p.win_price or 0.0), p.bookmaker)) if priced else None
         runners.append(
             Runner(
                 name=r.get("name") or "?",
@@ -64,7 +70,10 @@ def race_from(raw: Dict[str, Any]) -> Race:
                 best_price=best.win_price if best else None,
                 best_bookmaker=best.bookmaker if best else None,
                 # Longest price first: that is the order a comparison table wants.
-                prices=sorted(prices, key=lambda p: (p.win_price is None, -(p.win_price or 0))),
+                prices=sorted(
+                    prices,
+                    key=lambda p: (p.win_price is None, -(p.win_price or 0), p.bookmaker),
+                ),
             )
         )
     return Race(

@@ -30,8 +30,11 @@ _client: Optional[httpx.AsyncClient] = None
 
 def build_client() -> httpx.AsyncClient:
     headers = {
-        # Responses compress well: measured 2026-09-15, the demo next-to-go
-        # payload was 7,324 bytes identity against 1,531 on the wire with gzip.
+        # Responses compress well. Quote the RATIO, not byte counts: the demo
+        # sample's bookmaker panel varies per call, so an absolute figure is
+        # stale by the next request. Measured with tools/measure_gzip.py on
+        # 2026-09-15, the demo next-to-go payload was 7,025 bytes identity
+        # against 1,460 on the wire -- 4.81x, and 4.7-4.8x across repeat runs.
         "Accept-Encoding": "gzip",
         "Accept": "application/json",
         "User-Agent": USER_AGENT,

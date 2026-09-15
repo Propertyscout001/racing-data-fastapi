@@ -13,8 +13,12 @@ COPY app ./app
 
 # Run unprivileged. The upstream key arrives as an environment variable at run
 # time and is never baked into the image.
-RUN useradd --create-home --uid 10001 proxy
-USER proxy
+#
+# NOT named "proxy": Debian ships a system account with that name (uid 13), so
+# `useradd proxy` exits 9 and the build fails. This image was written before a
+# Docker daemon was available to build it and that is exactly the bug it hid.
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
 
 EXPOSE 8000
 

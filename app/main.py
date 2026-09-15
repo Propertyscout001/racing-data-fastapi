@@ -24,7 +24,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import upstream
+from . import config, upstream
 from .config import settings
 from .routers import best_odds, health, races
 from .upstream import UpstreamError
@@ -52,7 +52,19 @@ async def lifespan(app: FastAPI):
         settings.upstream_base,
         settings.ttl_races,
     )
+    if config.ENV_FILE_LOADED:
+        log.info("loaded %s", config.ENV_FILE.resolve())
     if not settings.keyed:
+        if config.ENV_FILE_LOADED:
+            log.warning(
+                "%s was loaded but PE_API_KEY is empty -- running KEYLESS on the demo "
+                "endpoints. Put a key in that file (PE_API_KEY=...) to serve the full feed.",
+                config.ENV_FILE,
+            )
+        elif config.ENV_FILE.exists():
+            log.warning(
+                "%s exists but could not be read -- running KEYLESS.", config.ENV_FILE
+            )
         log.info("no PE_API_KEY set -- serving the keyless demo endpoints. Free key: %s", SIGNUP)
     try:
         yield
@@ -79,14 +91,30 @@ app.include_router(best_odds.router)
 app.include_router(health.router)
 
 
+INBOUND_CREDENTIAL_HEADERS = (b"x-api-key", b"authorization", b"x-rapidapi-key")
+
+
 @app.middleware("http")
 async def strip_client_key(request: Request, call_next):
-    """A client of this service has no business supplying an upstream key.
+    """Delete inbound credential headers, then stamp the mode on the way out.
 
-    Nothing downstream reads the inbound header, but saying so explicitly makes
-    the trust boundary obvious to the next person editing this file: the key
-    comes from the environment, one place, and travels outbound only.
+    A client of this service has no business supplying an upstream key, and the
+    upstream key this service uses comes from the environment -- one place,
+    outbound only. Dropping the header at the edge means no future handler can
+    accidentally start honouring a caller-supplied key and turn this proxy into
+    a credential relay. It also keeps a caller's key out of anything downstream
+    might log.
+
+    This used to only stamp the header and say in a docstring that nothing read
+    the inbound one. A function called strip_client_key should strip.
     """
+    scope_headers = request.scope.get("headers") or []
+    kept = [(k, v) for k, v in scope_headers if k.lower() not in INBOUND_CREDENTIAL_HEADERS]
+    stripped = len(scope_headers) - len(kept)
+    if stripped:
+        request.scope["headers"] = kept
+        log.info("dropped %d inbound credential header(s) from %s", stripped, request.url.path)
+
     response = await call_next(request)
     response.headers["X-Upstream-Mode"] = settings.mode
     return response
